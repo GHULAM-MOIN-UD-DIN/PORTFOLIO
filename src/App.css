@@ -2000,6 +2000,35 @@
   right: 24px;
 }
 
+/* ── Mobile: center the chatbot panel ── */
+@media (max-width: 520px) {
+  .assistant-widget {
+    right: 0;
+    left: 0;
+    bottom: 16px;
+    align-items: center;
+    padding: 0 12px;
+  }
+
+  .assistant-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: min(92vh, 600px) !important;
+    border-radius: 20px 20px 16px 16px !important;
+    transform-origin: 50% 100% !important;
+  }
+
+  .assistant-widget.expanded .assistant-panel {
+    width: 100% !important;
+    height: min(96vh, 680px) !important;
+  }
+
+  /* Launcher button centered bottom */
+  .assistant-robot-launcher {
+    align-self: center;
+  }
+}
+
 .assistant-robot-launcher {
   isolation: isolate;
   width: 105px;
