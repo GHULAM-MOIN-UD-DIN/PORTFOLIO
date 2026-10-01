@@ -38,6 +38,8 @@ PROJECTS:
 1. SMS Site (HiChat) — ASP.NET Core MVC, C#, SQL Server, Groq AI Chatbot. Features: automated customer communication, secure auth, responsive UI. Live: sms-site.onrender.com
 2. RentalX — Laravel, PHP, MySQL. Features: property listings, real-time bookings, support ticketing, multi-role dashboards. Live: rentalx-8cmp.onrender.com
 3. FoodPOS — PHP, MySQL, JavaScript. Features: multi-tier auth, dynamic orders, receipt tracking for restaurants. Live: food-pose.infinityfreeapp.com
+4. MZ Inventory Pro — Full-Stack Web App, inventory tracking, stock reorder alerts, admin dashboard. Live: inventory-63kl.onrender.com
+5. Elegance Salone — PHP, MySQL, Google OAuth, salon management & appointment booking system. Live: salone.infinityfree.me
 
 TECHNICAL SKILLS:
 Languages: C#, PHP, JavaScript, SQL, HTML5, CSS3
@@ -59,7 +61,7 @@ PORTFOLIO SECTIONS:
 - About — background and story
 - Experience & Education — timeline
 - Skills / Tech Stack — all technologies
-- Projects — 3 live projects
+- Projects — 5 live projects
 - Services — what Moin offers
 - Contact — WhatsApp, email
 `;
@@ -97,6 +99,20 @@ export function isRomanUrduQuery(text) {
   if (tokens.length > 0 && (matchCount / tokens.length) >= 0.25) return true;
 
   return false;
+}
+
+// Helper: Detect if user wants to end/disconnect the call or say goodbye (e.g. "ok by", "ok bye", "allah hafiz")
+export function isCallEndCommand(text) {
+  if (!text || typeof text !== 'string') return false;
+  const clean = text
+    .toLowerCase()
+    .replace(/[.,!?;:'"()[\]{}]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const callEndRegex = /\b(ok\s*by|ok\s*bye|okay\s*bye|okay\s*by|bye\s*bye|bye|good\s*bye|goodbye|allah\s*hafiz|khuda\s*hafiz|allahhafiz|khudahafiz|call\s*end|end\s*call|call\s*kat|call\s*cut|cut\s*call|disconnect|tata|alvida)\b/i;
+
+  return callEndRegex.test(clean);
 }
 
 export const DEFAULT_GROQ_KEY = import.meta.env?.VITE_GROQ_API_KEY || '';
@@ -158,12 +174,32 @@ export function getLocalAIResponse(userText) {
   const lower = userText.toLowerCase().trim();
   const isUrdu = isRomanUrduQuery(lower);
 
+  // FAREWELL / BYE / OK BYE / CALL END
+  if (isCallEndCommand(lower)) {
+    if (isUrdu) {
+      return {
+        text: "Theek hai, Allah Hafiz! Ghulam Moin Uddin ke portfolio par aane ka shukriya. Agar aap ko kisi project ya freelancing ke hawalay se Moin se rabta karna ho toh direct WhatsApp ya email par connect kar sakte hain. Apna khayal rakhiye ga!",
+        cards: [
+          { title: "WhatsApp pe baat karein", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` },
+          { title: "Direct Email", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }
+        ]
+      };
+    }
+    return {
+      text: "Goodbye! Thank you for visiting Ghulam Moin Uddin's portfolio. Feel free to reach out directly via WhatsApp or email for any project inquiries or collaborations. Have a wonderful day!",
+      cards: [
+        { title: "Chat on WhatsApp", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` },
+        { title: "Direct Email", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }
+      ]
+    };
+  }
+
   // Direct Language Switch / Urdu Request
   if (lower.includes('roman urdu') || lower.includes('urdu') || lower.includes('hindi') || lower.includes('roman me') || lower.includes('roman ma')) {
     return {
       text: "Bilkul! Main Roman Urdu me hi baat kar raha hoon. Ghulam Moin Uddin Karachi se aik professional Full Stack Developer hain jo ASP.NET Core MVC, Laravel, PHP aur AI integrations me kaam karte hain. Aap unke projects, skills, freelancing ya contact details ke baray me kya poochna chahte hain?",
       cards: [
-        { title: "Moin ke Projects Dekhein", desc: "HiChat, RentalX, FoodPOS", action: "projects" },
+        { title: "Moin ke Projects Dekhein", desc: "HiChat, RentalX, FoodPOS, MZ Inventory, Elegance Salone", action: "projects" },
         { title: "WhatsApp pe baat karein", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` }
       ]
     };
@@ -173,7 +209,7 @@ export function getLocalAIResponse(userText) {
   if (/^(hi|hello|hey|salam|assalam|aoa|hola)/i.test(lower) || lower.includes('kese ho') || lower.includes('kaise ho') || lower.includes('kya haal') || lower.includes('kia hal')) {
     if (isUrdu) {
       return {
-        text: "Walaikum Assalam! Main Ghulam Moin Uddin ka official AI assistant hoon. Main aap ko Moin ke live projects (HiChat, RentalX, FoodPOS), technical skills, freelancing aur contact details ke baray me mukammal guide kar sakta hoon. Aap kya janna chahein gay?",
+        text: "Walaikum Assalam! Main Ghulam Moin Uddin ka official AI assistant hoon. Main aap ko Moin ke live projects (HiChat, RentalX, FoodPOS, MZ Inventory, Elegance Salone), technical skills, freelancing aur contact details ke baray me mukammal guide kar sakta hoon. Aap kya janna chahein gay?",
         cards: [
           { title: "Moin ke Projects", desc: "ASP.NET Core, Laravel & PHP work", action: "projects" },
           { title: "Direct Contact / WhatsApp", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` }
@@ -181,7 +217,7 @@ export function getLocalAIResponse(userText) {
       };
     }
     return {
-      text: "Hello! I am Ghulam Moin Uddin's official AI assistant. I can guide you through his full-stack projects (HiChat SMS, RentalX, FoodPOS), ASP.NET & Laravel skills, freelance work, or direct contact options. How can I help you today?",
+      text: "Hello! I am Ghulam Moin Uddin's official AI assistant. I can guide you through his full-stack projects (HiChat SMS, RentalX, FoodPOS, MZ Inventory, Elegance Salone), ASP.NET & Laravel skills, freelance work, or direct contact options. How can I help you today?",
       cards: [
         { title: "Explore Projects", desc: "Live ASP.NET, Laravel & PHP web apps", action: "projects" },
         { title: "Get in Touch", desc: "Chat directly on WhatsApp", link: `https://wa.me/${personalInfo.whatsappNumber}` }
@@ -195,7 +231,7 @@ export function getLocalAIResponse(userText) {
       return {
         text: "Ghulam Moin Uddin Karachi, Pakistan se aik energetic **Full Stack Web Developer** aur Software Engineering student hain.\n\n• **Core Expertise**: ASP.NET Core MVC, C#, Laravel, PHP, MySQL, SQL Server aur React.\n• **AI Integrations**: Web applications me Groq API, OpenRouter aur Vapi AI calling agents lagana.\n• **Freelancing**: Upwork aur Fiverr par bhi client projects deliver karte hain.\n• **Education**: Aptech Computer Education me ADSE (3 semesters mukammal) aur Intermediate in CS.\n• **Experience**: Developer Hub me remote Backend Developer ke tor par kaam kiya hai.",
         cards: [
-          { title: "Moin ke Projects Dekhein", desc: "HiChat, RentalX, FoodPOS", action: "projects" },
+          { title: "Moin ke Projects Dekhein", desc: "5 Production-Grade Web Apps", action: "projects" },
           { title: "WhatsApp pe baat karein", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` }
         ]
       };
@@ -203,7 +239,7 @@ export function getLocalAIResponse(userText) {
     return {
       text: "Ghulam Moin Uddin is a Karachi-based **Full Stack Web Developer** and Software Engineering student specializing in building robust, high-performance web applications.\n\n• **Core Stack**: ASP.NET Core MVC, C#, Laravel, PHP, SQL Server, MySQL, and React.\n• **AI Integrations**: Groq API, OpenRouter, and Vapi Voice Agents.\n• **Freelancing**: Also active on Upwork and Fiverr, delivering client projects.\n• **Background**: Remote Backend Developer experience at Developer Hub, currently pursuing ADSE at Aptech (3 semesters completed).",
       cards: [
-        { title: "View Selected Work", desc: "3 Production-Grade Web Apps", action: "projects" },
+        { title: "View Selected Work", desc: "5 Production-Grade Web Apps", action: "projects" },
         { title: "Connect via LinkedIn", desc: "Professional Profile", link: personalInfo.linkedin }
       ]
     };
@@ -230,23 +266,27 @@ export function getLocalAIResponse(userText) {
   }
 
   // 4. PROJECTS / WORK / KAAM / KYA BANAYA HAI
-  if (lower.includes('project') || lower.includes('kaam') || lower.includes('built') || lower.includes('portfolio') || lower.includes('banaya') || lower.includes('hichat') || lower.includes('rentalx') || lower.includes('foodpos') || lower.includes('sms site')) {
+  if (lower.includes('project') || lower.includes('kaam') || lower.includes('built') || lower.includes('portfolio') || lower.includes('banaya') || lower.includes('hichat') || lower.includes('rentalx') || lower.includes('foodpos') || lower.includes('sms site') || lower.includes('inventory') || lower.includes('salone') || lower.includes('salon')) {
     if (isUrdu) {
       return {
-        text: "Ghulam Moin Uddin ne 3 baray live production projects develop kiye hain:\n\n1. **SMS Site (HiChat)**: ASP.NET Core MVC platform jis me automated customer communication ke liye AI chatbot integrated hai aur custom secure auth hai.\n2. **RentalX**: Laravel-powered property rental aur booking system jis me customer support ticketing workflow shaamil hai.\n3. **FoodPOS**: Fast PHP & MySQL Point-of-Sale web app jo restaurants ke live orders aur receipt tracking manage karti hai.\n\nAap in ke live demo links neeche check kar sakte hain:",
+        text: "Ghulam Moin Uddin ne 5 baray live production projects develop kiye hain:\n\n1. **SMS Site (HiChat)**: ASP.NET Core MVC platform jis me automated customer communication ke liye AI chatbot integrated hai aur custom secure auth hai.\n2. **RentalX**: Laravel-powered property rental aur booking system jis me customer support ticketing workflow shaamil hai.\n3. **FoodPOS**: Fast PHP & MySQL Point-of-Sale web app jo restaurants ke live orders aur receipt tracking manage karti hai.\n4. **MZ Inventory Pro**: Cloud-hosted inventory & stock management system jo stock alerts aur control dashboard provide karta hai.\n5. **Elegance Salone**: Modern salon booking & management platform jis me Google OAuth aur appointment booking system hai.\n\nAap in ke live demo links neeche check kar sakte hain:",
         cards: [
           { title: "SMS Site (HiChat) Live", desc: "ASP.NET Core MVC & AI Chatbot", link: "https://sms-site.onrender.com/" },
           { title: "RentalX Live", desc: "Laravel Rental & Booking Platform", link: "https://rentalx-8cmp.onrender.com/" },
-          { title: "FoodPOS Live", desc: "PHP & MySQL POS System", link: "https://food-pose.infinityfreeapp.com/login.php" }
+          { title: "FoodPOS Live", desc: "PHP & MySQL POS System", link: "https://food-pose.infinityfreeapp.com/login.php" },
+          { title: "MZ Inventory Pro Live", desc: "Inventory & Stock Control Dashboard", link: "https://inventory-63kl.onrender.com/login" },
+          { title: "Elegance Salone Live", desc: "Salon Booking & Management System", link: "https://salone.infinityfree.me/login.php?i=2" }
         ]
       };
     }
     return {
-      text: "Ghulam Moin Uddin has engineered 3 major production-grade web platforms:\n\n1. **SMS Site (HiChat)**: Built with ASP.NET Core MVC, C#, SQL Server, featuring an integrated AI Chatbot for 24/7 automated support and custom authentication.\n2. **RentalX**: Developed with Laravel, PHP & MySQL, featuring real-time property listings, booking flows, and support ticket management.\n3. **FoodPOS**: A swift PHP & MySQL Point-of-Sale system built for dining and retail ordering workflows.\n\nExplore them live below:",
+      text: "Ghulam Moin Uddin has engineered 5 major production-grade web platforms:\n\n1. **SMS Site (HiChat)**: Built with ASP.NET Core MVC, C#, SQL Server, featuring an integrated AI Chatbot for 24/7 automated support and custom authentication.\n2. **RentalX**: Developed with Laravel, PHP & MySQL, featuring real-time property listings, booking flows, and support ticket management.\n3. **FoodPOS**: A swift PHP & MySQL Point-of-Sale system built for dining and retail ordering workflows.\n4. **MZ Inventory Pro**: Enterprise-grade cloud inventory and stock control dashboard hosted on Render.\n5. **Elegance Salone**: Complete salon management and appointment system with Google OAuth and dynamic service catalogs.\n\nExplore them live below:",
       cards: [
         { title: "SMS Site (HiChat) ↗", desc: "ASP.NET Core MVC & AI Chatbot", link: "https://sms-site.onrender.com/" },
         { title: "RentalX Portal ↗", desc: "Laravel Rental Platform", link: "https://rentalx-8cmp.onrender.com/" },
-        { title: "FoodPOS System ↗", desc: "PHP & MySQL POS System", link: "https://food-pose.infinityfreeapp.com/login.php" }
+        { title: "FoodPOS System ↗", desc: "PHP & MySQL POS System", link: "https://food-pose.infinityfreeapp.com/login.php" },
+        { title: "MZ Inventory Pro ↗", desc: "Inventory & Stock Dashboard", link: "https://inventory-63kl.onrender.com/login" },
+        { title: "Elegance Salone ↗", desc: "Salon Booking & Management", link: "https://salone.infinityfree.me/login.php?i=2" }
       ]
     };
   }
@@ -368,7 +408,7 @@ export function getLocalAIResponse(userText) {
   // 11. DEFAULT INTELLIGENT FALLBACK
   if (isUrdu) {
     return {
-      text: `Aap ke sawal ka shukriya! Ghulam Moin Uddin Karachi se aik Full Stack Web Developer hain jo ASP.NET Core MVC, Laravel, PHP aur AI Integrations me specialize karte hain, aur Upwork/Fiverr par freelance kaam bhi karte hain.\n\nAap in ke baray me kuch bhi pooch sakte hain:\n• Moin ke live projects (HiChat, RentalX, FoodPOS)\n• Technical skills aur tools\n• Freelancing (Upwork/Fiverr)\n• Taleem aur Aptech background\n• WhatsApp (+92 370 0100724) ya direct email`,
+      text: `Aap ke sawal ka shukriya! Ghulam Moin Uddin Karachi se aik Full Stack Web Developer hain jo ASP.NET Core MVC, Laravel, PHP aur AI Integrations me specialize karte hain, aur Upwork/Fiverr par freelance kaam bhi karte hain.\n\nAap in ke baray me kuch bhi pooch sakte hain:\n• Moin ke 5 live projects (HiChat, RentalX, FoodPOS, MZ Inventory, Elegance Salone)\n• Technical skills aur tools\n• Freelancing (Upwork/Fiverr)\n• Taleem aur Aptech background\n• WhatsApp (+92 370 0100724) ya direct email`,
       cards: [
         { title: "WhatsApp pe baat karein", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` },
         { title: "Direct Email bhejein", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }
@@ -377,7 +417,7 @@ export function getLocalAIResponse(userText) {
   }
 
   return {
-    text: `Thank you for your inquiry! Ghulam Moin Uddin is a Full Stack Web Developer based in Karachi, Pakistan specializing in ASP.NET Core MVC, Laravel, PHP, and AI Chatbot Integrations, and also freelances on Upwork and Fiverr.\n\nFeel free to ask about his:\n• Production projects (HiChat SMS, RentalX, FoodPOS)\n• Technical stack & backend capabilities\n• Freelancing (Upwork/Fiverr)\n• Work experience at Developer Hub\n• Education at Aptech\n• Contact & hiring information`,
+    text: `Thank you for your inquiry! Ghulam Moin Uddin is a Full Stack Web Developer based in Karachi, Pakistan specializing in ASP.NET Core MVC, Laravel, PHP, and AI Chatbot Integrations, and also freelances on Upwork and Fiverr.\n\nFeel free to ask about his:\n• 5 Production projects (HiChat SMS, RentalX, FoodPOS, MZ Inventory Pro, Elegance Salone)\n• Technical stack & backend capabilities\n• Freelancing (Upwork/Fiverr)\n• Work experience at Developer Hub\n• Education at Aptech\n• Contact & hiring information`,
     cards: [
       { title: "Chat on WhatsApp", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` },
       { title: "Direct Email", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }

@@ -18,7 +18,7 @@ export const personalInfo = {
   aboutBio: "Passionate about building responsive, user-friendly web applications and eager to gain professional experience while continuing to grow technical skills. Experienced in developing custom architectures, secure authentications, responsive user interfaces, and integrating modern AI chatbots via Groq API, OpenRouter, and Vapi.",
   stats: [
     { label: "Completed Semesters at Aptech", value: "3+" },
-    { label: "Production Web Projects", value: "3+" },
+    { label: "Production Web Projects", value: "5+" },
     { label: "Dedication to Code Quality", value: "100%" }
   ]
 };
@@ -137,6 +137,42 @@ export const projects = [
     themeColor: "#f59e0b",
     accentGrad: "linear-gradient(135deg, #451a03, #d97706 60%, #fbbf24)",
     badge: "03 // POINT OF SALE"
+  },
+  {
+    id: "mz-inventory",
+    title: "MZ Inventory Pro",
+    subtitle: "Enterprise Inventory & Stock Management Platform",
+    category: "Full-Stack Web App · Inventory Control · Cloud Dashboard",
+    description: "A comprehensive cloud-hosted inventory and stock management dashboard designed for real-time inventory tracking, low stock alerts, robust administrator access control, and seamless item lifecycle auditing.",
+    highlights: [
+      "Developed an enterprise-grade inventory tracking dashboard with real-time stock status and ledger records",
+      "Engineered secure administrative authentication with credential validation and password reset flows",
+      "Streamlined product catalog management, category filtering, and inventory reorder alerts",
+      "Deployed and optimized on Render cloud hosting for continuous uptime and reliability"
+    ],
+    tags: ["Full-Stack", "JavaScript", "PHP / Node.js", "Relational DB", "Render Cloud"],
+    liveUrl: "https://inventory-63kl.onrender.com/login",
+    themeColor: "#0284c7",
+    accentGrad: "linear-gradient(135deg, #082f49, #0284c7 60%, #38bdf8)",
+    badge: "04 // INVENTORY SYSTEM"
+  },
+  {
+    id: "elegance-salone",
+    title: "Elegance Salone",
+    subtitle: "Salon Management & Online Appointment System",
+    category: "PHP · MySQL · Google OAuth · Booking Management",
+    description: "A modern salon booking and business management platform featuring Google Identity OAuth authentication, dynamic service catalogs, automated appointment workflows, and a glassmorphic aesthetic.",
+    highlights: [
+      "Designed and built a salon booking and management platform with responsive glassmorphism UI",
+      "Implemented dual authentication system supporting secure email/password and Google Identity Services (OAuth)",
+      "Engineered appointment scheduling, service catalog browsing, and customer reservation tracking",
+      "Optimized MySQL database structure for quick appointment lookup and transaction logging on InfinityFree"
+    ],
+    tags: ["PHP", "MySQL", "Google OAuth", "JavaScript", "Glassmorphism CSS", "InfinityFree"],
+    liveUrl: "https://salone.infinityfree.me/login.php?i=2",
+    themeColor: "#8b5cf6",
+    accentGrad: "linear-gradient(135deg, #2e1065, #7c3aed 60%, #a78bfa)",
+    badge: "05 // SALON & APPOINTMENTS"
   }
 ];
 
@@ -229,12 +265,14 @@ export const techStack = [
 // Knowledge base for the Assistant Widget (Simulated AI responses + dynamic matching)
 export const assistantQA = [
   {
-    keywords: ["project", "projects", "work", "portfolio", "built", "showcase"],
-    answer: "Ghulam Moin Uddin has built 3 major production-grade projects:\n\n1. **SMS Site (HiChat)**: ASP.NET Core MVC SMS platform with an integrated AI chatbot for automated communication (sms-site.onrender.com).\n2. **RentalX**: Laravel-powered rental platform with real-time booking and support ticket management (rentalx-8cmp.onrender.com).\n3. **FoodPOS**: Fast PHP & MySQL Point-of-Sale web app for restaurant order workflows (food-pose.infinityfreeapp.com).\n\nWould you like more details on any of these?",
+    keywords: ["project", "projects", "work", "portfolio", "built", "showcase", "inventory", "salon", "salone"],
+    answer: "Ghulam Moin Uddin has built 5 major production-grade projects:\n\n1. **SMS Site (HiChat)**: ASP.NET Core MVC SMS platform with an integrated AI chatbot (sms-site.onrender.com).\n2. **RentalX**: Laravel-powered rental platform with real-time booking and support ticket management (rentalx-8cmp.onrender.com).\n3. **FoodPOS**: Fast PHP & MySQL Point-of-Sale web app for restaurant workflows (food-pose.infinityfreeapp.com).\n4. **MZ Inventory Pro**: Full-stack inventory & stock management dashboard (inventory-63kl.onrender.com).\n5. **Elegance Salone**: Complete salon management & booking system with Google OAuth (salone.infinityfree.me).\n\nWould you like more details on any of these?",
     cards: [
       { title: "SMS Site (HiChat)", desc: "ASP.NET Core MVC & AI Chatbot", link: "https://sms-site.onrender.com/" },
       { title: "RentalX", desc: "Laravel Rental Platform", link: "https://rentalx-8cmp.onrender.com/" },
-      { title: "FoodPOS", desc: "PHP & MySQL POS System", link: "https://food-pose.infinityfreeapp.com/login.php" }
+      { title: "FoodPOS", desc: "PHP & MySQL POS System", link: "https://food-pose.infinityfreeapp.com/login.php" },
+      { title: "MZ Inventory Pro", desc: "Inventory & Stock Control Dashboard", link: "https://inventory-63kl.onrender.com/login" },
+      { title: "Elegance Salone", desc: "Salon Booking & Management System", link: "https://salone.infinityfree.me/login.php?i=2" }
     ]
   },
   {

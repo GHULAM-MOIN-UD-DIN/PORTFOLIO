@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { personalInfo } from '../data/portfolioData';
-import { callGroqAPI, getLocalAIResponse, isRomanUrduQuery } from '../utils/aiAgent';
+import { callGroqAPI, getLocalAIResponse, isRomanUrduQuery, isCallEndCommand } from '../utils/aiAgent';
 
 export default function AssistantWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,11 +48,13 @@ export default function AssistantWidget() {
         { title: "Send an Email", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }
       ];
     }
-    if (lower.includes('project') || lower.includes('work') || lower.includes('kaam') || lower.includes('built')) {
+    if (lower.includes('project') || lower.includes('work') || lower.includes('kaam') || lower.includes('built') || lower.includes('inventory') || lower.includes('salon') || lower.includes('salone')) {
       return [
         { title: "SMS Site (HiChat) ↗", desc: "ASP.NET Core & AI Chatbot", link: "https://sms-site.onrender.com/" },
         { title: "RentalX ↗", desc: "Laravel Rental Platform", link: "https://rentalx-8cmp.onrender.com/" },
-        { title: "FoodPOS ↗", desc: "PHP & MySQL POS System", link: "https://food-pose.infinityfreeapp.com/login.php" }
+        { title: "FoodPOS ↗", desc: "PHP & MySQL POS System", link: "https://food-pose.infinityfreeapp.com/login.php" },
+        { title: "MZ Inventory Pro ↗", desc: "Inventory & Stock Dashboard", link: "https://inventory-63kl.onrender.com/login" },
+        { title: "Elegance Salone ↗", desc: "Salon Booking & Management", link: "https://salone.infinityfree.me/login.php?i=2" }
       ];
     }
     if (lower.includes('resume') || lower.includes('cv')) {
@@ -260,6 +262,13 @@ export default function AssistantWidget() {
               .join('');
             transcriptRef.current = transcript;
             setVoiceTranscript(transcript);
+
+            // Instant disconnect trigger if user says "ok by", "ok bye", "bye", "allah hafiz"
+            if (isCallEndCommand(transcript)) {
+              try {
+                recognition.stop();
+              } catch (e) { }
+            }
           };
 
           recognition.onend = () => {
@@ -308,8 +317,55 @@ export default function AssistantWidget() {
     }
   };
 
+  // Gracefully end call when user says "ok by", "ok bye", "bye", "allah hafiz", etc.
+  const handleEndCallByVoice = (userSaid) => {
+    // 1. Immediately kill active recognition listeners so it doesn't listen anymore
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.abort();
+      } catch (e) { }
+      recognitionRef.current = null;
+    }
+
+    const isUrdu = isRomanUrduQuery(userSaid);
+    const farewellSpeech = isUrdu
+      ? "Theek hai, Allah Hafiz! Apna khayal rakhiye ga."
+      : "Alright, goodbye! Have a wonderful day.";
+
+    setVoiceStatus('CALL ENDING...');
+    setVoiceTranscript(`You: "${userSaid}"\nAgent: "${farewellSpeech}"\n\n[Call Disconnected]`);
+
+    let finalized = false;
+    const finalizeDisconnect = () => {
+      if (finalized) return;
+      finalized = true;
+      stopVoiceSession();
+      setVoiceStatus('CALL ENDED');
+      setTimeout(() => {
+        setVoiceStatus('READY TO TALK');
+      }, 2500);
+    };
+
+    // Speak farewell and immediately end call once speech concludes
+    speakText(farewellSpeech, finalizeDisconnect);
+
+    // Safety fallback: ensure call is fully terminated after 3.2s even if SpeechSynthesis hangs
+    setTimeout(() => {
+      finalizeDisconnect();
+    }, 3200);
+  };
+
   const respondWithSpeech = async (userSaid) => {
     if (!isVoiceActiveRef.current) return;
+
+    // Check if user said "ok by", "ok bye", "bye", "allah hafiz", etc. to end call
+    if (isCallEndCommand(userSaid)) {
+      handleEndCallByVoice(userSaid);
+      return;
+    }
+
     setVoiceStatus('THINKING...');
     let answerText = '';
 
@@ -382,8 +438,12 @@ STRICT VOICE RULES:
     setVoiceTranscript("Listening for question...");
   };
 
-  const speakText = (text) => {
-    if (!isVoiceActiveRef.current || !('speechSynthesis' in window)) return;
+  const speakText = (text, onFinished = null) => {
+    if (!('speechSynthesis' in window)) {
+      if (onFinished) onFinished();
+      return;
+    }
+    if (!isVoiceActiveRef.current && !onFinished) return;
 
     // Cancel any current speech first
     try {
@@ -391,7 +451,7 @@ STRICT VOICE RULES:
     } catch (e) { }
 
     const doSpeak = () => {
-      if (!isVoiceActiveRef.current) return;
+      if (!isVoiceActiveRef.current && !onFinished) return;
 
       const utterance = new SpeechSynthesisUtterance(text);
       currentUtteranceRef.current = utterance;
@@ -467,6 +527,10 @@ STRICT VOICE RULES:
 
       utterance.onend = () => {
         currentUtteranceRef.current = null;
+        if (onFinished) {
+          onFinished();
+          return;
+        }
         if (!isVoiceActiveRef.current) return;
         setVoiceStatus('LISTENING...');
         transcriptRef.current = '';
@@ -488,6 +552,13 @@ STRICT VOICE RULES:
               .join('');
             transcriptRef.current = transcript;
             setVoiceTranscript(transcript);
+
+            // Instant disconnect trigger if user says "ok by", "ok bye", "bye", "allah hafiz"
+            if (isCallEndCommand(transcript)) {
+              try {
+                recog.stop();
+              } catch (e) { }
+            }
           };
           recog.onend = () => {
             if (!isVoiceActiveRef.current) return;
@@ -519,6 +590,10 @@ STRICT VOICE RULES:
 
       utterance.onerror = (event) => {
         currentUtteranceRef.current = null;
+        if (onFinished) {
+          onFinished();
+          return;
+        }
         // 'canceled' means we stopped it intentionally — not an error
         if (event.error !== 'canceled' && isVoiceActiveRef.current) {
           setVoiceStatus('LISTENING...');
@@ -529,6 +604,7 @@ STRICT VOICE RULES:
         window.speechSynthesis.speak(utterance);
       } catch (e) {
         console.warn('SpeechSynthesis speak() error:', e);
+        if (onFinished) onFinished();
       }
     };
 

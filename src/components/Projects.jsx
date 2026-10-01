@@ -43,6 +43,8 @@ export default function Projects() {
     'sms-site': '/smssite.jpg',
     'rentalx': '/rentalx.jpg',
     'foodpos': '/food.jpg',
+    'mz-inventory': '/mzinventory.png',
+    'elegance-salone': '/elegance-salone.png',
   };
 
   const renderVisualMockup = (project) => {
@@ -51,6 +53,8 @@ export default function Projects() {
       'sms-site': 'sms-site.onrender.com',
       'rentalx': 'rentalx-8cmp.onrender.com',
       'foodpos': 'food-pose.infinityfreeapp.com',
+      'mz-inventory': 'inventory-63kl.onrender.com',
+      'elegance-salone': 'salone.infinityfree.me',
     };
     const displayUrl = urlMap[project.id] || project.liveUrl;
 
