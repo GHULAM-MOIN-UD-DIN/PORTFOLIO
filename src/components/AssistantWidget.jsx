@@ -373,15 +373,23 @@ export default function AssistantWidget() {
     abortControllerRef.current = abortController;
 
     const isUrdu = isRomanUrduQuery(userSaid);
+    const isGreeting = /^(?:hi|hello|hey|salam|assalam|aoa|hola)\b/i.test(userSaid.trim());
+
     try {
       const voicePrompt = `User asked via voice call: "${userSaid}".
-STRICT VOICE RULES:
-- DO NOT say "Hello", "Hi", "I am Moin's assistant", "Main Moin ka assistant hoon", or introduce yourself.
-- Answer ONLY what was asked — stay specific and on-topic, do not pad with unrelated background info.
-- Give a direct, confident, natural-sounding answer in 1 or 2 spoken sentences maximum (under 25 words).
-- Speak like a real, well-spoken human on a phone call — warm, relaxed, professional. Not stiff, not scripted, not like a translated document.
+STRICT TOPIC-SPECIFIC VOICE RULES:
+${isGreeting 
+  ? '- User greeted you. Give ONLY a warm, concise 1-sentence introduction of Ghulam Moin Uddin (Full Stack Web Developer from Karachi, Pakistan) and ask how you can help. Do NOT list projects, skills, or education yet.' 
+  : `- Answer ONLY what was asked — stay strictly on that single topic:
+- If user asks about SKILLS: mention ONLY technical skills (ASP.NET Core, Laravel, PHP, React, SQL Server, MySQL).
+- If user asks about EDUCATION: mention ONLY education (ADSE at Aptech Computer Education, Intermediate in CS).
+- If user asks about PROJECTS: mention ONLY the 5 live projects (HiChat SMS, RentalX, FoodPOS, MZ Inventory Pro, Elegance Salone).
+- If user asks about FREELANCING: state clearly that Moin actively freelances on both Upwork and Fiverr for web development and AI integrations.
+- Do NOT mix topics or add unasked details.`}
+- Give a direct, natural-sounding answer in 1 or 2 spoken sentences maximum (under 28 words).
+- Speak like a real, well-spoken human on a phone call — warm, relaxed, professional.
 - Do NOT use markdown symbols, asterisks, bullet points, or URLs.
-- Language: ${isUrdu ? 'Speak strictly in natural, everyday conversational Roman Urdu — the way people actually talk in Karachi, not formal textbook Urdu' : 'Speak strictly in clear, natural, conversational English'}.`;
+- Language: ${isUrdu ? 'Speak strictly in natural, conversational Roman Urdu (Karachi style)' : 'Speak strictly in clear, natural, conversational English'}.`;
 
       answerText = await callGroqAPI(voicePrompt, messages, groqApiKey, abortController.signal);
     } catch (err) {
@@ -401,15 +409,21 @@ STRICT VOICE RULES:
       return;
     }
 
-    // Clean text for speech synthesis: strip repetitive greetings & robotic intros
+    // Clean text for speech synthesis
     let cleanSpeech = answerText
-      .replace(/^(?:hello|hi|hey|salam|assalam-o-alaikum|aoa)?[\s,!-]+(?:i am|i'm|this is|main|mera naam)\s+[^.!?]+(?:assistant|agent|moin)[.!?\s]*/i, '')
-      .replace(/^(?:hello|hi|hey|salam|assalam-o-alaikum|aoa|sure|certainly)[,!.\s]+/i, '')
       .replace(/[*_#•`]/g, '')
       .replace(/\[.*?\]\(.*?\)/g, '')
       .replace(/https?:\/\/\S+/g, '')
       .replace(/\n+/g, ' ')
       .trim();
+
+    // If NOT a greeting, strip any unintentional leading greetings
+    if (!isGreeting) {
+      cleanSpeech = cleanSpeech
+        .replace(/^(?:hello|hi|hey|salam|assalam-o-alaikum|aoa)?[\s,!-]+(?:i am|i'm|this is|main|mera naam)\s+[^.!?]+(?:assistant|agent|moin)[.!?\s]*/i, '')
+        .replace(/^(?:hello|hi|hey|salam|assalam-o-alaikum|aoa|sure|certainly)[,!.\s]+/i, '')
+        .trim();
+    }
 
     // Limit to at most 1-2 short sentences
     const sentenceMatch = cleanSpeech.match(/[^.!?]+[.!?]+/g);

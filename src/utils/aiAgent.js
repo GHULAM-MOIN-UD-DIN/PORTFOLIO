@@ -4,13 +4,22 @@ import { personalInfo, projects, services, valuePillars, experience, education, 
 export const MOIN_SYSTEM_PROMPT = `You are the official AI Portfolio Assistant for Ghulam Moin Uddin — a Full Stack Web Developer from Karachi, Pakistan. You speak on behalf of Moin's portfolio to visitors, clients, and recruiters.
 
 === STRICT BEHAVIOR RULES ===
-1. NEVER repeat your own introduction. NEVER say "I am Moin's assistant" or "Mera naam..." in every reply. Introduce yourself ONLY if the user explicitly asks "Who are you?" or "Aap kaun hain?".
-2. ALWAYS answer the actual question asked, directly and specifically — do not give a generic overview when the user asked about one particular thing (e.g. if they ask only about freelancing, answer ONLY about freelancing, not his whole bio).
+1. ANSWER ONLY WHAT IS ASKED — this is the most important rule. Do NOT mix topics:
+   - If someone says "Hello/Hi/Salam" → give ONLY a warm introduction of Moin (name, role, location). Do NOT list projects, skills, or education. Just a clean, professional intro and ask how you can help.
+   - If someone asks about SKILLS → list ONLY his technical skills/stack. Do NOT mention projects, education, or freelancing.
+   - If someone asks about EDUCATION → list ONLY his education. Do NOT mention skills, projects, or freelancing.
+   - If someone asks about PROJECTS → list ONLY his projects. Do NOT mention skills, education, or freelancing.
+   - If someone asks about FREELANCING → tell ONLY about his Upwork and Fiverr presence. Do NOT mention projects, education, or skills.
+   - If someone asks about EXPERIENCE → tell ONLY about Developer Hub work. Do NOT mention education, skills, or projects.
+   - If someone asks about CONTACT → give ONLY contact details.
+   - If someone says "Ok bye" / "Bye" / "Allah Hafiz" → say a professional goodbye and END the conversation.
+
+2. NEVER repeat your own introduction in every reply. Introduce yourself ONLY on the first greeting.
 3. You represent MOIN — speak about him in third person ("Moin ne...", "He built...", "His skills include...").
-4. Match the user's language and register naturally: Roman Urdu question → answer in natural, conversational Roman Urdu (not textbook Urdu, not overly formal). English question → answer in clear professional English. Mixed Roman Urdu/English (Urdish) question → reply in the same natural mixed style people actually speak in Karachi. Never sound robotic or like a translated script — sound like a real, well-spoken assistant.
-5. VOICE MODE (spoken replies): max 1-2 short spoken sentences (under 25 words total), no markdown, no asterisks, no bullet points, no URLs, no repeated greetings, no "I am Moin's assistant" filler. Speak the way a calm, confident human would answer a phone call — warm but brief and to the point.
+4. Match the user's language naturally: Roman Urdu → natural conversational Roman Urdu (Karachi style). English → professional English. Mixed → reply in the same mixed style.
+5. VOICE MODE (spoken replies): max 1-2 short spoken sentences (under 30 words total), no markdown, no asterisks, no bullet points, no URLs. Sound like a real, calm, confident human on a phone call.
 6. CHAT MODE (text replies): use clear markdown formatting (bold, bullet points) for readability.
-7. Always stay professional and confident about Moin's work — never say "I don't know" flatly; if something isn't covered, direct the user to contact Moin directly via WhatsApp or email.
+7. Stay professional and confident — never say "I don't know"; if something isn't covered, direct to WhatsApp or email.
 
 === FULL INFORMATION ABOUT GHULAM MOIN UDDIN ===
 Name: Ghulam Moin Uddin
@@ -30,16 +39,16 @@ PROFESSIONAL EXPERIENCE:
 - Remote Backend Developer at Developer Hub (Feb 2026 – Mar 2026): Built REST API endpoints, handled server-side logic, relational database queries, agile team collaboration.
 
 FREELANCING:
-- Moin also works as an independent freelance developer, taking on client projects for web development, backend systems, and AI chatbot/voice-agent integrations.
-- He is active on freelance platforms including Upwork and Fiverr, delivering ASP.NET Core, Laravel, and PHP based solutions to clients.
-- Exact profile links are shared on request — direct interested clients to contact Moin via WhatsApp (+92 370 0100724) or email (moin69603@gmail.com) for his Upwork/Fiverr profile and past client work samples.
+- Moin works as an independent freelance developer on both Upwork and Fiverr platforms.
+- He delivers ASP.NET Core, Laravel, PHP, and AI chatbot/voice-agent integration projects to clients worldwide.
+- Exact profile links are shared on request via WhatsApp (+92 370 0100724) or email (moin69603@gmail.com).
 
-PROJECTS:
-1. SMS Site (HiChat) — ASP.NET Core MVC, C#, SQL Server, Groq AI Chatbot. Features: automated customer communication, secure auth, responsive UI. Live: sms-site.onrender.com
-2. RentalX — Laravel, PHP, MySQL. Features: property listings, real-time bookings, support ticketing, multi-role dashboards. Live: rentalx-8cmp.onrender.com
-3. FoodPOS — PHP, MySQL, JavaScript. Features: multi-tier auth, dynamic orders, receipt tracking for restaurants. Live: food-pose.infinityfreeapp.com
-4. MZ Inventory Pro — Full-Stack Web App, inventory tracking, stock reorder alerts, admin dashboard. Live: inventory-63kl.onrender.com
-5. Elegance Salone — PHP, MySQL, Google OAuth, salon management & appointment booking system. Live: salone.infinityfree.me
+PROJECTS (5 Live Production Apps):
+1. SMS Site (HiChat) — ASP.NET Core MVC, C#, SQL Server, Groq AI Chatbot. Live: sms-site.onrender.com
+2. RentalX — Laravel, PHP, MySQL. Property listings, bookings, support ticketing. Live: rentalx-8cmp.onrender.com
+3. FoodPOS — PHP, MySQL, JavaScript. POS system for restaurants. Live: food-pose.infinityfreeapp.com
+4. MZ Inventory Pro — Full-Stack inventory tracking, stock alerts, admin dashboard. Live: inventory-63kl.onrender.com
+5. Elegance Salone — PHP, MySQL, Google OAuth, salon booking & management. Live: salone.infinityfree.me
 
 TECHNICAL SKILLS:
 Languages: C#, PHP, JavaScript, SQL, HTML5, CSS3
@@ -55,15 +64,6 @@ SERVICES:
 - Database Architecture & SQL
 - AI Chatbot & API Integration
 - Freelance Client Projects (Upwork / Fiverr / Direct Contract)
-
-PORTFOLIO SECTIONS:
-- Hero / Home — introduction
-- About — background and story
-- Experience & Education — timeline
-- Skills / Tech Stack — all technologies
-- Projects — 5 live projects
-- Services — what Moin offers
-- Contact — WhatsApp, email
 `;
 
 // Helper: Detect if user is asking in Roman Urdu or Urdu
@@ -110,7 +110,12 @@ export function isCallEndCommand(text) {
     .replace(/\s+/g, ' ')
     .trim();
 
-  const callEndRegex = /\b(ok\s*by|ok\s*bye|okay\s*bye|okay\s*by|bye\s*bye|bye|good\s*bye|goodbye|allah\s*hafiz|khuda\s*hafiz|allahhafiz|khudahafiz|call\s*end|end\s*call|call\s*kat|call\s*cut|cut\s*call|disconnect|tata|alvida)\b/i;
+  // Exact single words or short combinations
+  if (clean === 'by' || clean === 'bye' || clean === 'ok by' || clean === 'ok bye' || clean === 'okay bye' || clean === 'okay by') {
+    return true;
+  }
+
+  const callEndRegex = /\b(ok\s*by|ok\s*bye|okay\s*bye|okay\s*by|bye\s*bye|by\s*by|good\s*bye|goodbye|allah\s*hafiz|khuda\s*hafiz|allahhafiz|khudahafiz|call\s*end|end\s*call|call\s*kat|call\s*cut|cut\s*call|call\s*band|band\s*karo|band\s*kardo|call\s*khatam|disconnect|tata|alvida|\bbye\b|\bby\b)\b/i;
 
   return callEndRegex.test(clean);
 }
@@ -178,7 +183,7 @@ export function getLocalAIResponse(userText) {
   if (isCallEndCommand(lower)) {
     if (isUrdu) {
       return {
-        text: "Theek hai, Allah Hafiz! Ghulam Moin Uddin ke portfolio par aane ka shukriya. Agar aap ko kisi project ya freelancing ke hawalay se Moin se rabta karna ho toh direct WhatsApp ya email par connect kar sakte hain. Apna khayal rakhiye ga!",
+        text: "Allah Hafiz! Moin ke portfolio par aane ka bohot shukriya. Apna khayal rakhiye ga!",
         cards: [
           { title: "WhatsApp pe baat karein", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` },
           { title: "Direct Email", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }
@@ -186,7 +191,7 @@ export function getLocalAIResponse(userText) {
       };
     }
     return {
-      text: "Goodbye! Thank you for visiting Ghulam Moin Uddin's portfolio. Feel free to reach out directly via WhatsApp or email for any project inquiries or collaborations. Have a wonderful day!",
+      text: "Goodbye! Thank you for visiting Moin's portfolio. Have a great day!",
       cards: [
         { title: "Chat on WhatsApp", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` },
         { title: "Direct Email", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }
@@ -197,59 +202,63 @@ export function getLocalAIResponse(userText) {
   // Direct Language Switch / Urdu Request
   if (lower.includes('roman urdu') || lower.includes('urdu') || lower.includes('hindi') || lower.includes('roman me') || lower.includes('roman ma')) {
     return {
-      text: "Bilkul! Main Roman Urdu me hi baat kar raha hoon. Ghulam Moin Uddin Karachi se aik professional Full Stack Developer hain jo ASP.NET Core MVC, Laravel, PHP aur AI integrations me kaam karte hain. Aap unke projects, skills, freelancing ya contact details ke baray me kya poochna chahte hain?",
+      text: "Bilkul! Main Roman Urdu me baat karunga. Moin Karachi se Full Stack Developer hain. Aap kya janna chahein gay — skills, projects, education ya kuch aur?",
       cards: [
-        { title: "Moin ke Projects Dekhein", desc: "HiChat, RentalX, FoodPOS, MZ Inventory, Elegance Salone", action: "projects" },
-        { title: "WhatsApp pe baat karein", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` }
+        { title: "Projects Dekhein", desc: "5 Live Production Apps", action: "projects" },
+        { title: "Skills Dekhein", desc: "Technical Stack", action: "scroll-technology" }
       ]
     };
   }
 
-  // 1. GREETING / SALAM
+  // 1. GREETING / SALAM — ONLY introduce Moin (name, role, city). NO projects, NO skills listing.
   if (/^(hi|hello|hey|salam|assalam|aoa|hola)/i.test(lower) || lower.includes('kese ho') || lower.includes('kaise ho') || lower.includes('kya haal') || lower.includes('kia hal')) {
     if (isUrdu) {
       return {
-        text: "Walaikum Assalam! Main Ghulam Moin Uddin ka official AI assistant hoon. Main aap ko Moin ke live projects (HiChat, RentalX, FoodPOS, MZ Inventory, Elegance Salone), technical skills, freelancing aur contact details ke baray me mukammal guide kar sakta hoon. Aap kya janna chahein gay?",
+        text: "Walaikum Assalam! Main Ghulam Moin Uddin ka AI assistant hoon. Moin Karachi, Pakistan se aik Full Stack Web Developer hain. Aap kya janna chahein gay?",
         cards: [
-          { title: "Moin ke Projects", desc: "ASP.NET Core, Laravel & PHP work", action: "projects" },
-          { title: "Direct Contact / WhatsApp", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` }
+          { title: "Projects", desc: "Moin ke live projects dekhein", action: "projects" },
+          { title: "Skills", desc: "Technical stack dekhein", action: "scroll-technology" },
+          { title: "Contact", desc: "WhatsApp pe baat karein", link: `https://wa.me/${personalInfo.whatsappNumber}` }
         ]
       };
     }
     return {
-      text: "Hello! I am Ghulam Moin Uddin's official AI assistant. I can guide you through his full-stack projects (HiChat SMS, RentalX, FoodPOS, MZ Inventory, Elegance Salone), ASP.NET & Laravel skills, freelance work, or direct contact options. How can I help you today?",
+      text: "Hello! I'm Ghulam Moin Uddin's AI assistant. Moin is a Full Stack Web Developer based in Karachi, Pakistan. What would you like to know about him?",
       cards: [
-        { title: "Explore Projects", desc: "Live ASP.NET, Laravel & PHP web apps", action: "projects" },
-        { title: "Get in Touch", desc: "Chat directly on WhatsApp", link: `https://wa.me/${personalInfo.whatsappNumber}` }
+        { title: "Projects", desc: "View live production apps", action: "projects" },
+        { title: "Skills", desc: "See technical stack", action: "scroll-technology" },
+        { title: "Contact", desc: "Chat on WhatsApp", link: `https://wa.me/${personalInfo.whatsappNumber}` }
       ]
     };
   }
 
-  // 2. IDENTITY / WHO IS MOIN / MOIN KON HAI
+  // 2. IDENTITY / WHO IS MOIN / MOIN KON HAI — Full intro (name, role, location, brief overview)
   if (lower.includes('who is') || lower.includes('about moin') || lower.includes('kon hai') || lower.includes('kaun hai') || lower.includes('kon ha') || lower.includes('kaun ha') || lower.includes('bare me') || lower.includes('baare me') || lower.includes('kaisa hai') || lower.includes('introduce') || lower.includes('taaruf') || lower.includes('ap kon') || lower.includes('aap kon')) {
     if (isUrdu) {
       return {
-        text: "Ghulam Moin Uddin Karachi, Pakistan se aik energetic **Full Stack Web Developer** aur Software Engineering student hain.\n\n• **Core Expertise**: ASP.NET Core MVC, C#, Laravel, PHP, MySQL, SQL Server aur React.\n• **AI Integrations**: Web applications me Groq API, OpenRouter aur Vapi AI calling agents lagana.\n• **Freelancing**: Upwork aur Fiverr par bhi client projects deliver karte hain.\n• **Education**: Aptech Computer Education me ADSE (3 semesters mukammal) aur Intermediate in CS.\n• **Experience**: Developer Hub me remote Backend Developer ke tor par kaam kiya hai.",
+        text: "Ghulam Moin Uddin Karachi, Pakistan se aik **Full Stack Web Developer** aur Software Engineering student hain. Woh ASP.NET Core MVC, Laravel, PHP aur AI integrations me specialize karte hain. Abhi Aptech Computer Education me ADSE kar rahe hain. Aap unke baare me kya specifically janna chahein gay — skills, projects, education ya freelancing?",
         cards: [
-          { title: "Moin ke Projects Dekhein", desc: "5 Production-Grade Web Apps", action: "projects" },
-          { title: "WhatsApp pe baat karein", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` }
+          { title: "Skills Dekhein", desc: "Technical stack", action: "scroll-technology" },
+          { title: "Projects Dekhein", desc: "5 Live Apps", action: "projects" },
+          { title: "WhatsApp", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` }
         ]
       };
     }
     return {
-      text: "Ghulam Moin Uddin is a Karachi-based **Full Stack Web Developer** and Software Engineering student specializing in building robust, high-performance web applications.\n\n• **Core Stack**: ASP.NET Core MVC, C#, Laravel, PHP, SQL Server, MySQL, and React.\n• **AI Integrations**: Groq API, OpenRouter, and Vapi Voice Agents.\n• **Freelancing**: Also active on Upwork and Fiverr, delivering client projects.\n• **Background**: Remote Backend Developer experience at Developer Hub, currently pursuing ADSE at Aptech (3 semesters completed).",
+      text: "Ghulam Moin Uddin is a **Full Stack Web Developer** and Software Engineering student from Karachi, Pakistan. He specializes in ASP.NET Core MVC, Laravel, PHP, and AI integrations. Currently pursuing ADSE at Aptech Computer Education. What specifically would you like to know — his skills, projects, education, or freelancing?",
       cards: [
-        { title: "View Selected Work", desc: "5 Production-Grade Web Apps", action: "projects" },
-        { title: "Connect via LinkedIn", desc: "Professional Profile", link: personalInfo.linkedin }
+        { title: "View Skills", desc: "Technical stack", action: "scroll-technology" },
+        { title: "View Projects", desc: "5 Live Apps", action: "projects" },
+        { title: "Connect on LinkedIn", desc: "Professional Profile", link: personalInfo.linkedin }
       ]
     };
   }
 
-  // 3. FREELANCING / UPWORK / FIVERR
+  // 3. FREELANCING / UPWORK / FIVERR — ONLY freelancing info, no projects/skills
   if (lower.includes('freelanc') || lower.includes('upwork') || lower.includes('fiverr') || lower.includes('freelance')) {
     if (isUrdu) {
       return {
-        text: "Ji haan, Moin freelance developer ke tor par bhi kaam karte hain. Woh **Upwork** aur **Fiverr** dono platforms par active hain aur clients ke liye ASP.NET Core, Laravel, PHP aur AI chatbot/voice-agent projects deliver karte hain.\n\nExact profile links WhatsApp ya email par share kiye jaate hain — direct contact kar ke portfolio samples aur profile mangwa sakte hain.",
+        text: "Ji bilkul! Moin **Upwork** aur **Fiverr** dono platforms par active freelancer hain.\n\n• **Upwork**: Professional client projects — web development, backend APIs, aur AI integrations deliver karte hain.\n• **Fiverr**: Chhote aur medium projects ke liye bhi available hain — fast delivery aur quality work ke saath.\n\nDono platforms par ASP.NET Core, Laravel, PHP aur AI chatbot/voice-agent integration projects karte hain. Profile links chahiye toh WhatsApp ya email par request karein.",
         cards: [
           { title: "WhatsApp pe profile mangein", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}?text=Hi%20Moin,%20I%27d%20like%20your%20Upwork/Fiverr%20profile` },
           { title: "Email par rabta karein", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }
@@ -257,7 +266,7 @@ export function getLocalAIResponse(userText) {
       };
     }
     return {
-      text: "Yes, Moin also works as an independent freelance developer on **Upwork** and **Fiverr**, delivering client projects in ASP.NET Core, Laravel, PHP, and AI chatbot/voice-agent integrations.\n\nExact profile links are shared directly — reach out on WhatsApp or email for his Upwork/Fiverr profile and client work samples.",
+      text: "Absolutely! Moin is an active freelancer on both **Upwork** and **Fiverr**:\n\n• **Upwork**: Handles professional client projects — full-stack web development, backend API architecture, and AI integrations.\n• **Fiverr**: Available for small-to-medium projects with fast turnaround and quality delivery.\n\nHe delivers ASP.NET Core, Laravel, PHP, and AI chatbot/voice-agent integration projects on both platforms. Reach out on WhatsApp or email to get his profile links.",
       cards: [
         { title: "Request profile on WhatsApp", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}?text=Hi%20Moin,%20I%27d%20like%20your%20Upwork/Fiverr%20profile` },
         { title: "Send an Email", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }
@@ -291,20 +300,20 @@ export function getLocalAIResponse(userText) {
     };
   }
 
-  // 5. SKILLS / TECH STACK / KYA AATA HAI
+  // 5. SKILLS / TECH STACK / KYA AATA HAI — ONLY skills, no projects/education
   if (lower.includes('skill') || lower.includes('tech') || lower.includes('stack') || lower.includes('language') || lower.includes('c#') || lower.includes('dotnet') || lower.includes('laravel') || lower.includes('php') || lower.includes('kya aata')) {
     if (isUrdu) {
       return {
-        text: "Moin ka technical stack modern backend aur frontend dono par mushtamil hai:\n\n• **Languages**: C#, PHP, JavaScript, SQL, HTML5, CSS3\n• **Frameworks**: ASP.NET Core MVC, Laravel, React, Tailwind CSS, Bootstrap\n• **Databases**: Microsoft SQL Server, MySQL, Relational Database Modeling\n• **AI & APIs**: Groq API, OpenRouter, Vapi Voice AI Agents, RESTful APIs\n• **DevOps & Tools**: Git, GitHub, Render, InfinityFree, VS Code, Visual Studio",
+        text: "Moin ki technical skills yeh hain:\n\n• **Languages**: C#, PHP, JavaScript, SQL, HTML5, CSS3\n• **Frameworks**: ASP.NET Core MVC, Laravel, React, Tailwind CSS, Bootstrap\n• **Databases**: Microsoft SQL Server, MySQL\n• **AI & APIs**: Groq API, OpenRouter, Vapi Voice AI, RESTful APIs\n• **Tools**: Git, GitHub, Render, InfinityFree, VS Code, Visual Studio",
         cards: [
-          { title: "Tech Stack Section", desc: "Portfolio me Mukammal Stack Dekhein", action: "scroll-technology" }
+          { title: "Tech Stack Dekhein", desc: "Portfolio me skills section", action: "scroll-technology" }
         ]
       };
     }
     return {
-      text: "Moin's technical stack spans across modern full-stack development:\n\n• **Languages**: C#, PHP, JavaScript, SQL, HTML5, CSS3\n• **Backend Frameworks**: ASP.NET Core MVC, Laravel\n• **Frontend**: React, Tailwind CSS, Bootstrap, Modern JavaScript\n• **Databases**: Microsoft SQL Server, MySQL (Query Optimization & Schema Design)\n• **AI Tools**: Groq API, OpenRouter, Vapi Voice Agents\n• **Deployment**: Git, GitHub, Render, InfinityFree",
+      text: "Moin's technical skills include:\n\n• **Languages**: C#, PHP, JavaScript, SQL, HTML5, CSS3\n• **Frameworks**: ASP.NET Core MVC, Laravel, React, Tailwind CSS, Bootstrap\n• **Databases**: Microsoft SQL Server, MySQL\n• **AI & APIs**: Groq API, OpenRouter, Vapi Voice AI, RESTful APIs\n• **Tools**: Git, GitHub, Render, InfinityFree, VS Code, Visual Studio",
       cards: [
-        { title: "Explore Tech Stack", desc: "View categorized skills section", action: "scroll-technology" }
+        { title: "View Tech Stack", desc: "Skills section in portfolio", action: "scroll-technology" }
       ]
     };
   }
@@ -329,20 +338,20 @@ export function getLocalAIResponse(userText) {
     };
   }
 
-  // 7. EDUCATION / TALEEM / PARHAI / APTECH
+  // 7. EDUCATION / TALEEM / PARHAI / APTECH — ONLY education, no skills/projects
   if (lower.includes('education') || lower.includes('study') || lower.includes('aptech') || lower.includes('college') || lower.includes('degree') || lower.includes('parhai') || lower.includes('taleem') || lower.includes('qualification')) {
     if (isUrdu) {
       return {
-        text: "Moin ki taleemi qualification yeh hai:\n\n1. **ADSE (Advanced Diploma in Software Engineering)** - Aptech Computer Education (3 Semesters Completed, In Progress).\n2. **Intermediate in Computer Science** - Govt. Degree Science & Commerce College, Asifabad, Karachi (Completed).\n3. **Matriculation in Computer Science** - MAFFH Schooling System, Karachi (Completed).",
+        text: "Moin ki education yeh hai:\n\n1. **ADSE (Advanced Diploma in Software Engineering)** — Aptech Computer Education, Karachi (3 Semesters mukammal, abhi jaari hai).\n2. **Intermediate in Computer Science** — Govt. Degree Science & Commerce College, Asifabad, Karachi.\n3. **Matriculation in Computer Science** — MAFFH Schooling System, Karachi.",
         cards: [
-          { title: "Education Timeline", desc: "Taleemi records check karein", action: "scroll-experience" }
+          { title: "Education Timeline", desc: "Taleemi records dekhein", action: "scroll-experience" }
         ]
       };
     }
     return {
-      text: "Moin's educational background includes:\n\n1. **ADSE (Advanced Diploma in Software Engineering)**: Aptech Computer Education, Karachi (3 Semesters completed, in progress).\n2. **Intermediate in Computer Science**: Govt. Degree Science & Commerce College Asifabad, Karachi.\n3. **Matriculation in Computer Science**: MAFFH Schooling System, Karachi.",
+      text: "Moin's education:\n\n1. **ADSE (Advanced Diploma in Software Engineering)** — Aptech Computer Education, Karachi (3 Semesters completed, in progress).\n2. **Intermediate in Computer Science** — Govt. Degree Science & Commerce College, Asifabad, Karachi.\n3. **Matriculation in Computer Science** — MAFFH Schooling System, Karachi.",
       cards: [
-        { title: "Education Timeline", desc: "View full academic credentials", action: "scroll-experience" }
+        { title: "Education Timeline", desc: "View academic credentials", action: "scroll-experience" }
       ]
     };
   }
@@ -405,22 +414,24 @@ export function getLocalAIResponse(userText) {
     };
   }
 
-  // 11. DEFAULT INTELLIGENT FALLBACK
+  // 11. DEFAULT INTELLIGENT FALLBACK — brief and ask what they want to know
   if (isUrdu) {
     return {
-      text: `Aap ke sawal ka shukriya! Ghulam Moin Uddin Karachi se aik Full Stack Web Developer hain jo ASP.NET Core MVC, Laravel, PHP aur AI Integrations me specialize karte hain, aur Upwork/Fiverr par freelance kaam bhi karte hain.\n\nAap in ke baray me kuch bhi pooch sakte hain:\n• Moin ke 5 live projects (HiChat, RentalX, FoodPOS, MZ Inventory, Elegance Salone)\n• Technical skills aur tools\n• Freelancing (Upwork/Fiverr)\n• Taleem aur Aptech background\n• WhatsApp (+92 370 0100724) ya direct email`,
+      text: "Shukriya! Moin Karachi se Full Stack Developer hain. Aap kya janna chahein gay — skills, projects, education, freelancing ya contact details?",
       cards: [
-        { title: "WhatsApp pe baat karein", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` },
-        { title: "Direct Email bhejein", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }
+        { title: "Projects", desc: "5 Live Apps", action: "projects" },
+        { title: "Skills", desc: "Technical Stack", action: "scroll-technology" },
+        { title: "WhatsApp", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` }
       ]
     };
   }
 
   return {
-    text: `Thank you for your inquiry! Ghulam Moin Uddin is a Full Stack Web Developer based in Karachi, Pakistan specializing in ASP.NET Core MVC, Laravel, PHP, and AI Chatbot Integrations, and also freelances on Upwork and Fiverr.\n\nFeel free to ask about his:\n• 5 Production projects (HiChat SMS, RentalX, FoodPOS, MZ Inventory Pro, Elegance Salone)\n• Technical stack & backend capabilities\n• Freelancing (Upwork/Fiverr)\n• Work experience at Developer Hub\n• Education at Aptech\n• Contact & hiring information`,
+    text: "Thank you! Moin is a Full Stack Developer from Karachi. What would you like to know — his skills, projects, education, freelancing, or contact details?",
     cards: [
-      { title: "Chat on WhatsApp", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}` },
-      { title: "Direct Email", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }
+      { title: "Projects", desc: "5 Live Apps", action: "projects" },
+      { title: "Skills", desc: "Technical Stack", action: "scroll-technology" },
+      { title: "Contact", desc: "WhatsApp / Email", link: `https://wa.me/${personalInfo.whatsappNumber}` }
     ]
   };
 }
