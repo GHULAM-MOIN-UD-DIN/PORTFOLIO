@@ -42,6 +42,12 @@ export default function AssistantWidget() {
   // Helper: Smart action cards for responses
   const getSmartCardsForQuery = (queryText) => {
     const lower = queryText.toLowerCase();
+    if (lower.includes('freelanc') || lower.includes('upwork') || lower.includes('fiverr')) {
+      return [
+        { title: "Request profile on WhatsApp", desc: "+92 370 0100724", link: `https://wa.me/${personalInfo.whatsappNumber}?text=Hi%20Moin,%20I%27d%20like%20your%20Upwork/Fiverr%20profile` },
+        { title: "Send an Email", desc: personalInfo.email, link: `mailto:${personalInfo.email}` }
+      ];
+    }
     if (lower.includes('project') || lower.includes('work') || lower.includes('kaam') || lower.includes('built')) {
       return [
         { title: "SMS Site (HiChat) ↗", desc: "ASP.NET Core & AI Chatbot", link: "https://sms-site.onrender.com/" },
@@ -315,9 +321,11 @@ export default function AssistantWidget() {
       const voicePrompt = `User asked via voice call: "${userSaid}".
 STRICT VOICE RULES:
 - DO NOT say "Hello", "Hi", "I am Moin's assistant", "Main Moin ka assistant hoon", or introduce yourself.
-- Give a direct, accurate answer in 1 or 2 spoken sentences maximum (under 25 words).
+- Answer ONLY what was asked — stay specific and on-topic, do not pad with unrelated background info.
+- Give a direct, confident, natural-sounding answer in 1 or 2 spoken sentences maximum (under 25 words).
+- Speak like a real, well-spoken human on a phone call — warm, relaxed, professional. Not stiff, not scripted, not like a translated document.
 - Do NOT use markdown symbols, asterisks, bullet points, or URLs.
-- Language: ${isUrdu ? 'Speak strictly in casual, polite Roman Urdu' : 'Speak strictly in clear, natural English'}.`;
+- Language: ${isUrdu ? 'Speak strictly in natural, everyday conversational Roman Urdu — the way people actually talk in Karachi, not formal textbook Urdu' : 'Speak strictly in clear, natural, conversational English'}.`;
 
       answerText = await callGroqAPI(voicePrompt, messages, groqApiKey, abortController.signal);
     } catch (err) {
@@ -332,7 +340,7 @@ STRICT VOICE RULES:
       if ('speechSynthesis' in window) {
         try {
           window.speechSynthesis.cancel();
-        } catch (e) {}
+        } catch (e) { }
       }
       return;
     }
@@ -359,7 +367,7 @@ STRICT VOICE RULES:
       if ('speechSynthesis' in window) {
         try {
           window.speechSynthesis.cancel();
-        } catch (e) {}
+        } catch (e) { }
       }
       return;
     }
@@ -380,7 +388,7 @@ STRICT VOICE RULES:
     // Cancel any current speech first
     try {
       window.speechSynthesis.cancel();
-    } catch (e) {}
+    } catch (e) { }
 
     const doSpeak = () => {
       if (!isVoiceActiveRef.current) return;
@@ -388,20 +396,74 @@ STRICT VOICE RULES:
       const utterance = new SpeechSynthesisUtterance(text);
       currentUtteranceRef.current = utterance;
       utterance.rate = 1.0;
-      utterance.pitch = 1.0;
+      utterance.pitch = 1.08; // Pleasant, natural female tone
       utterance.volume = 1.0;
 
-      // Pick a natural English voice
+      // Pick female voice (strictly avoid male voices like David, Mark, George, Guy, etc.)
       try {
         const voices = window.speechSynthesis.getVoices();
         if (voices.length > 0) {
-          const preferred = voices.find(
-            (v) => (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Zira') || v.name.includes('David')) && v.lang.startsWith('en')
-          ) || voices.find((v) => v.lang.startsWith('en') && !v.localService)
-            || voices.find((v) => v.lang.startsWith('en'));
+          const isUrdu = isRomanUrduQuery(text);
+
+          const isMale = (v) => {
+            const n = (v.name || '').toLowerCase();
+            return (
+              n.includes('david') ||
+              n.includes('mark') ||
+              n.includes('george') ||
+              (n.includes('male') && !n.includes('female')) ||
+              n.includes('guy') ||
+              n.includes('hemant') ||
+              n.includes('madhur') ||
+              n.includes('asif') ||
+              n.includes('ravi') ||
+              n.includes('prabhat') ||
+              n.includes('stefan') ||
+              n.includes('james') ||
+              n.includes('richard') ||
+              n.includes('microsoft david')
+            );
+          };
+
+          const isKnownFemale = (v) => {
+            const n = (v.name || '').toLowerCase();
+            return (
+              n.includes('female') ||
+              n.includes('zira') ||
+              n.includes('jenny') ||
+              n.includes('aria') ||
+              n.includes('samantha') ||
+              n.includes('swara') ||
+              n.includes('neerja') ||
+              n.includes('heera') ||
+              n.includes('victoria') ||
+              n.includes('karen') ||
+              n.includes('uzma') ||
+              n.includes('veena') ||
+              n.includes('google us english') ||
+              n.includes('google हिन्दी')
+            );
+          };
+
+          let preferred;
+          if (isUrdu) {
+            // For Roman Urdu: prioritize South Asian / Desi female voices, then standard female voices
+            preferred =
+              voices.find((v) => isKnownFemale(v) && (v.lang.startsWith('ur') || v.lang.startsWith('hi') || v.lang.startsWith('en-IN'))) ||
+              voices.find((v) => !isMale(v) && (v.lang.startsWith('ur') || v.lang.startsWith('hi') || v.lang.startsWith('en-IN'))) ||
+              voices.find((v) => isKnownFemale(v) && v.lang.startsWith('en')) ||
+              voices.find((v) => !isMale(v) && v.lang.startsWith('en'));
+          } else {
+            // For English: prioritize known female voices (Zira, Jenny, Aria, Samantha)
+            preferred =
+              voices.find((v) => isKnownFemale(v) && v.lang.startsWith('en')) ||
+              voices.find((v) => !isMale(v) && (v.name.includes('Natural') || v.name.includes('Google')) && v.lang.startsWith('en')) ||
+              voices.find((v) => !isMale(v) && v.lang.startsWith('en'));
+          }
+
           if (preferred) utterance.voice = preferred;
         }
-      } catch (e) {}
+      } catch (e) { }
 
       utterance.onend = () => {
         currentUtteranceRef.current = null;
@@ -434,7 +496,7 @@ STRICT VOICE RULES:
               respondWithSpeech(captured);
             } else {
               setVoiceStatus('LISTENING...');
-              try { if (isVoiceActiveRef.current) recog.start(); } catch (e) {}
+              try { if (isVoiceActiveRef.current) recog.start(); } catch (e) { }
             }
           };
           recog.onerror = () => {
@@ -444,7 +506,7 @@ STRICT VOICE RULES:
               respondWithSpeech(captured);
             } else {
               setVoiceStatus('LISTENING...');
-              try { if (isVoiceActiveRef.current) recog.start(); } catch (e) {}
+              try { if (isVoiceActiveRef.current) recog.start(); } catch (e) { }
             }
           };
           recognitionRef.current = recog;
@@ -452,7 +514,7 @@ STRICT VOICE RULES:
 
         try {
           recog.start();
-        } catch (e) {}
+        } catch (e) { }
       };
 
       utterance.onerror = (event) => {
@@ -494,323 +556,323 @@ STRICT VOICE RULES:
   };
 
   return (
-      <div className={`assistant-widget ${isOpen ? 'open' : ''} ${isExpanded ? 'expanded' : ''}`}>
-        {/* Robot Floating Launcher Button */}
-        {!isOpen && (
-          <button
-            type="button"
-            className="assistant-robot-launcher"
-            onClick={() => setIsOpen(true)}
-            aria-label="Open Moin's AI Portfolio Assistant"
-            title="Chat with Moin's Portfolio Assistant"
-          >
-            <div className="robot-launcher-aura"></div>
-            <div className="robot-launcher-visual">
-              <div className="robot-avatar-wrapper">
+    <div className={`assistant-widget ${isOpen ? 'open' : ''} ${isExpanded ? 'expanded' : ''}`}>
+      {/* Robot Floating Launcher Button */}
+      {!isOpen && (
+        <button
+          type="button"
+          className="assistant-robot-launcher"
+          onClick={() => setIsOpen(true)}
+          aria-label="Open Moin's AI Portfolio Assistant"
+          title="Chat with Moin's Portfolio Assistant"
+        >
+          <div className="robot-launcher-aura"></div>
+          <div className="robot-launcher-visual">
+            <div className="robot-avatar-wrapper">
+              <img
+                src="/chatbot.png"
+                alt="AI Chatbot"
+                className="robot-avatar-img"
+              />
+              <span className="robot-online-dot"></span>
+            </div>
+            <span className="robot-badge-hint">AI ASSISTANT</span>
+          </div>
+        </button>
+      )}
+
+      {/* Assistant Modal Window */}
+      {isOpen && (
+        <div className="assistant-panel" role="dialog" aria-label="AI Portfolio Assistant">
+          {/* Header */}
+          <div className="assistant-header">
+            <div className="assistant-identity">
+              <div className="assistant-header-avatar">
                 <img
                   src="/chatbot.png"
-                  alt="AI Chatbot"
-                  className="robot-avatar-img"
+                  alt="Moin's Assistant"
+                  className="assistant-header-img"
                 />
-                <span className="robot-online-dot"></span>
+                <span className="assistant-status-dot"></span>
               </div>
-              <span className="robot-badge-hint">AI ASSISTANT</span>
+              <div>
+                <strong>Moin's Assistant</strong>
+                <small>PORTFOLIO ASSISTANT</small>
+              </div>
             </div>
-          </button>
-        )}
 
-        {/* Assistant Modal Window */}
-        {isOpen && (
-          <div className="assistant-panel" role="dialog" aria-label="AI Portfolio Assistant">
-            {/* Header */}
-            <div className="assistant-header">
-              <div className="assistant-identity">
-                <div className="assistant-header-avatar">
-                  <img
-                    src="/chatbot.png"
-                    alt="Moin's Assistant"
-                    className="assistant-header-img"
-                  />
-                  <span className="assistant-status-dot"></span>
-                </div>
-                <div>
-                  <strong>Moin's Assistant</strong>
-                  <small>PORTFOLIO ASSISTANT</small>
-                </div>
-              </div>
+            <div className="assistant-header-actions">
+              {activeTab === 'chat' && (
+                <button
+                  type="button"
+                  onClick={handleResetChat}
+                  title="Reset conversation"
+                  aria-label="Reset conversation"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                    <path d="M21 3v5h-5"></path>
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                    <path d="M8 16H3v5"></path>
+                  </svg>
+                </button>
+              )}
 
-              <div className="assistant-header-actions">
-                {activeTab === 'chat' && (
-                  <button
-                    type="button"
-                    onClick={handleResetChat}
-                    title="Reset conversation"
-                    aria-label="Reset conversation"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
-                      <path d="M21 3v5h-5"></path>
-                      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
-                      <path d="M8 16H3v5"></path>
-                    </svg>
-                  </button>
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                title={isExpanded ? "Collapse modal" : "Expand modal"}
+                aria-label={isExpanded ? "Collapse modal" : "Expand modal"}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  {isExpanded ? (
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+                  ) : (
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+                  )}
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                title="Close assistant"
+                aria-label="Close assistant"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Chat / Voice Tabs */}
+          <div className="assistant-tabs">
+            <button
+              type="button"
+              className={activeTab === 'chat' ? 'active' : ''}
+              onClick={() => setActiveTab('chat')}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Chat</span>
+            </button>
+            <button
+              type="button"
+              className={activeTab === 'voice' ? 'active' : ''}
+              onClick={() => setActiveTab('voice')}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+              <span>Voice</span>
+            </button>
+          </div>
+
+          {/* Active Tab: CHAT */}
+          {activeTab === 'chat' && (
+            <>
+              <div className="assistant-messages">
+                {messages.map((msg) => (
+                  <div key={msg.id} className={`assistant-message ${msg.sender}`}>
+                    {msg.sender === 'assistant' && (
+                      <div className="assistant-msg-avatar">
+                        <img src="/chatbot.png" alt="Assistant" />
+                      </div>
+                    )}
+                    <div className="assistant-message-content">
+                      <span>{msg.text}</span>
+                      {msg.cards && msg.cards.length > 0 && (
+                        <div className="assistant-cards">
+                          {msg.cards.map((card, cIdx) => (
+                            <div
+                              key={cIdx}
+                              className="assistant-card"
+                              onClick={() => {
+                                if (card.link) {
+                                  window.open(card.link, '_blank');
+                                } else if (card.action === 'scroll-technology') {
+                                  scrollToSection('technology');
+                                } else if (card.action === 'scroll-experience') {
+                                  scrollToSection('experience');
+                                } else if (card.action === 'projects') {
+                                  handleSendMessage('Show me all projects');
+                                }
+                              }}
+                            >
+                              <strong>{card.title} ↗</strong>
+                              <p>{card.desc}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {isTyping && (
+                  <div className="assistant-message assistant">
+                    <div className="assistant-msg-avatar">
+                      <img src="/chatbot.png" alt="Assistant" />
+                    </div>
+                    <div className="assistant-message-content">
+                      <div className="typing-dots" style={{ padding: '12px' }}>
+                        <i></i><i></i><i></i>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  title={isExpanded ? "Collapse modal" : "Expand modal"}
-                  aria-label={isExpanded ? "Collapse modal" : "Expand modal"}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    {isExpanded ? (
-                      <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
-                    ) : (
-                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
-                    )}
-                  </svg>
-                </button>
+                {/* 4 Starter Quick Actions */}
+                {messages.length === 1 && (
+                  <div className="assistant-starter-options">
+                    <button type="button" onClick={() => handleStarterOption('projects')}>
+                      <span className="starter-icon-box" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="16 18 22 12 16 6"></polyline>
+                          <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                      </span>
+                      <div>
+                        <strong>Explore projects</strong>
+                        <small>See selected ASP.NET, Laravel &amp; PHP work</small>
+                      </div>
+                      <svg className="starter-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
+                      </svg>
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  title="Close assistant"
-                  aria-label="Close assistant"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
+                    <button type="button" onClick={() => handleStarterOption('services')}>
+                      <span className="starter-icon-box" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <rect width="20" height="14" x="2" y="7" rx="2" ry="2"></rect>
+                          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                      </span>
+                      <div>
+                        <strong>View services</strong>
+                        <small>Full stack development &amp; AI integrations</small>
+                      </div>
+                      <svg className="starter-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
+                      </svg>
+                    </button>
+
+                    <button type="button" onClick={() => handleStarterOption('discuss')}>
+                      <span className="starter-icon-box" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                      </span>
+                      <div>
+                        <strong>Discuss a project</strong>
+                        <small>Share an idea and get a clear next step</small>
+                      </div>
+                      <svg className="starter-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
+                      </svg>
+                    </button>
+
+                    <button type="button" onClick={() => handleStarterOption('contact')}>
+                      <span className="starter-icon-box" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                      </span>
+                      <div>
+                        <strong>Contact Moin</strong>
+                        <small>Direct WhatsApp, phone, or email</small>
+                      </div>
+                      <svg className="starter-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
+                      </svg>
+                    </button>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
               </div>
-            </div>
 
-            {/* Chat / Voice Tabs */}
-            <div className="assistant-tabs">
+              {/* Chat Input Bar */}
+              <form
+                className="assistant-input"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
+              >
+                <input
+                  type="text"
+                  value={inputVal}
+                  onChange={(e) => setInputVal(e.target.value)}
+                  placeholder="Ask about projects, skills, or experience..."
+                />
+                <button
+                  type="submit"
+                  disabled={!inputVal.trim()}
+                  aria-label="Send message"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+              </form>
+            </>
+          )}
+
+          {/* Active Tab: VOICE */}
+          {activeTab === 'voice' && (
+            <div className={`voice-panel ${isVoiceActive ? 'active' : ''}`}>
+              <div className="voice-status">
+                <i></i>
+                <span>{voiceStatus}</span>
+              </div>
+
+              {/* Pulsating Voice Orb with 3D Robot Image */}
+              <div className="voice-orb">
+                <i></i>
+                <i></i>
+                <div className="voice-avatar-frame">
+                  <img src="/chatbot.png" alt="Voice Assistant" className="voice-robot-img" />
+                </div>
+              </div>
+
+              <h3>Voice Assistant</h3>
+              <p>Speak with Moin's interactive assistant about his software engineering experience and projects.</p>
+
+              {voiceTranscript && (
+                <div className="voice-transcript">
+                  {voiceTranscript}
+                </div>
+              )}
+
               <button
                 type="button"
-                className={activeTab === 'chat' ? 'active' : ''}
-                onClick={() => setActiveTab('chat')}
+                className={`voice-start ${isVoiceActive ? 'active' : ''}`}
+                onClick={toggleVoiceSession}
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <span>Chat</span>
-              </button>
-              <button
-                type="button"
-                className={activeTab === 'voice' ? 'active' : ''}
-                onClick={() => setActiveTab('voice')}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                   <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                   <line x1="12" y1="19" x2="12" y2="23"></line>
                   <line x1="8" y1="23" x2="16" y2="23"></line>
                 </svg>
-                <span>Voice</span>
+                <span>{isVoiceActive ? 'End Voice Session' : 'Start Voice Session'}</span>
               </button>
             </div>
-
-            {/* Active Tab: CHAT */}
-            {activeTab === 'chat' && (
-              <>
-                <div className="assistant-messages">
-                  {messages.map((msg) => (
-                    <div key={msg.id} className={`assistant-message ${msg.sender}`}>
-                      {msg.sender === 'assistant' && (
-                        <div className="assistant-msg-avatar">
-                          <img src="/chatbot.png" alt="Assistant" />
-                        </div>
-                      )}
-                      <div className="assistant-message-content">
-                        <span>{msg.text}</span>
-                        {msg.cards && msg.cards.length > 0 && (
-                          <div className="assistant-cards">
-                            {msg.cards.map((card, cIdx) => (
-                              <div
-                                key={cIdx}
-                                className="assistant-card"
-                                onClick={() => {
-                                  if (card.link) {
-                                    window.open(card.link, '_blank');
-                                  } else if (card.action === 'scroll-technology') {
-                                    scrollToSection('technology');
-                                  } else if (card.action === 'scroll-experience') {
-                                    scrollToSection('experience');
-                                  } else if (card.action === 'projects') {
-                                    handleSendMessage('Show me all projects');
-                                  }
-                                }}
-                              >
-                                <strong>{card.title} ↗</strong>
-                                <p>{card.desc}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-
-                  {isTyping && (
-                    <div className="assistant-message assistant">
-                      <div className="assistant-msg-avatar">
-                        <img src="/chatbot.png" alt="Assistant" />
-                      </div>
-                      <div className="assistant-message-content">
-                        <div className="typing-dots" style={{ padding: '12px' }}>
-                          <i></i><i></i><i></i>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 4 Starter Quick Actions */}
-                  {messages.length === 1 && (
-                    <div className="assistant-starter-options">
-                      <button type="button" onClick={() => handleStarterOption('projects')}>
-                        <span className="starter-icon-box" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="16 18 22 12 16 6"></polyline>
-                            <polyline points="8 6 2 12 8 18"></polyline>
-                          </svg>
-                        </span>
-                        <div>
-                          <strong>Explore projects</strong>
-                          <small>See selected ASP.NET, Laravel &amp; PHP work</small>
-                        </div>
-                        <svg className="starter-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="7" y1="17" x2="17" y2="7"></line>
-                          <polyline points="7 7 17 7 17 17"></polyline>
-                        </svg>
-                      </button>
-
-                      <button type="button" onClick={() => handleStarterOption('services')}>
-                        <span className="starter-icon-box" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                            <rect width="20" height="14" x="2" y="7" rx="2" ry="2"></rect>
-                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                          </svg>
-                        </span>
-                        <div>
-                          <strong>View services</strong>
-                          <small>Full stack development &amp; AI integrations</small>
-                        </div>
-                        <svg className="starter-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="7" y1="17" x2="17" y2="7"></line>
-                          <polyline points="7 7 17 7 17 17"></polyline>
-                        </svg>
-                      </button>
-
-                      <button type="button" onClick={() => handleStarterOption('discuss')}>
-                        <span className="starter-icon-box" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                          </svg>
-                        </span>
-                        <div>
-                          <strong>Discuss a project</strong>
-                          <small>Share an idea and get a clear next step</small>
-                        </div>
-                        <svg className="starter-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="7" y1="17" x2="17" y2="7"></line>
-                          <polyline points="7 7 17 7 17 17"></polyline>
-                        </svg>
-                      </button>
-
-                      <button type="button" onClick={() => handleStarterOption('contact')}>
-                        <span className="starter-icon-box" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                          </svg>
-                        </span>
-                        <div>
-                          <strong>Contact Moin</strong>
-                          <small>Direct WhatsApp, phone, or email</small>
-                        </div>
-                        <svg className="starter-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="7" y1="17" x2="17" y2="7"></line>
-                          <polyline points="7 7 17 7 17 17"></polyline>
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Chat Input Bar */}
-                <form
-                  className="assistant-input"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }}
-                >
-                  <input
-                    type="text"
-                    value={inputVal}
-                    onChange={(e) => setInputVal(e.target.value)}
-                    placeholder="Ask about projects, skills, or experience..."
-                  />
-                  <button
-                    type="submit"
-                    disabled={!inputVal.trim()}
-                    aria-label="Send message"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="22" y1="2" x2="11" y2="13"></line>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                  </button>
-                </form>
-              </>
-            )}
-
-            {/* Active Tab: VOICE */}
-            {activeTab === 'voice' && (
-              <div className={`voice-panel ${isVoiceActive ? 'active' : ''}`}>
-                <div className="voice-status">
-                  <i></i>
-                  <span>{voiceStatus}</span>
-                </div>
-
-                {/* Pulsating Voice Orb with 3D Robot Image */}
-                <div className="voice-orb">
-                  <i></i>
-                  <i></i>
-                  <div className="voice-avatar-frame">
-                    <img src="/chatbot.png" alt="Voice Assistant" className="voice-robot-img" />
-                  </div>
-                </div>
-
-                <h3>Voice Assistant</h3>
-                <p>Speak with Moin's interactive assistant about his software engineering experience and projects.</p>
-
-                {voiceTranscript && (
-                  <div className="voice-transcript">
-                    {voiceTranscript}
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  className={`voice-start ${isVoiceActive ? 'active' : ''}`}
-                  onClick={toggleVoiceSession}
-                >
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                    <line x1="12" y1="19" x2="12" y2="23"></line>
-                    <line x1="8" y1="23" x2="16" y2="23"></line>
-                  </svg>
-                  <span>{isVoiceActive ? 'End Voice Session' : 'Start Voice Session'}</span>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
